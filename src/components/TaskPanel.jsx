@@ -44,7 +44,7 @@
 //   );
 // }
 
-import { Button, Flex, Input, Modal } from 'antd';
+import { Button, Flex, Form, Input, Modal } from 'antd';
 import React, { useState } from 'react';
 import { useTasks } from '../context/TaskContext';
 // import './styles/TodayTasks.css';
@@ -62,10 +62,16 @@ export default function TaskPanel() {
   // const [showModal, setShowModal] = useState(false);
   // const [filter, setFilter] = useState('all');
   const [input, setInput] = useState('');
+   const [form] = Form.useForm();
   const [isValid, setIsValid] = useState(false);
-
+  const onFinish = values => {
+    console.log('Success:', values);
+  };
+  const onFinishFailed = errorInfo => {
+    console.log('Failed:', errorInfo);
+  };
   const handleSubmit = (e) => {
-   setIsValid(input == "" ? true : false)
+    setIsValid(input == "" ? true : false)
 
     e.preventDefault();
     if (!input.trim()) return;
@@ -75,16 +81,19 @@ export default function TaskPanel() {
     addTask(input.trim());
     setInput('');
     setIsModalOpen(false);
-    
+
   };
 
-  const filteredTasks = tasks.filter((task) =>
-    filter === 'completed'
-      ? task.completed
-      : filter === 'pending'
-        ? !task.completed
-        : true
-  );
+const filteredTasks = tasks.filter((task) => {
+  switch (filter) {
+    case 'completed':           // only finished tasks
+      return  task.status === 'done';
+    case 'pending':             // everything not finished
+      return  task.status == 'inProgress';
+    default:                    // 'all'
+      return true;
+  }
+});
 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -134,7 +143,7 @@ export default function TaskPanel() {
       </div>
 
       <ul className="task-list">
-        {filteredTasks.map((data, index) => (
+        {filteredTasks.reverse().map((data, index) => (
           <li key={index} className="task-item">
             <p style={{ borderBottom: "1px solid #ddd", paddingBottom: "10px", marginBottom: "10px" }}
               className={`${data.completed ? 'completed' : ''}`}
@@ -180,19 +189,71 @@ export default function TaskPanel() {
         </div>
       )} */}
 
-      <Modal
+      {/* <Modal
         title="Add New Task"
         closable={{ 'aria-label': 'Custom Close Button' }}
         open={isModalOpen}
         onOk={handleSubmit}
         onCancel={handleCancel}
       >
-        <Input placeholder="Enter Task"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          style={{ marginBottom: "20px" }} />
-         {isValid && "Task title is required"}
-      </Modal>
+        <Form
+          name="basic"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          style={{ maxWidth: 600 }}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={handleCancel}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Username"
+            name="username"
+            rules={[{ required: true, message: 'Please input your username!' }]}
+          >
+            <Input onChange={(e) => setInput(e.target.value)} />
+          </Form.Item>
+          <Form.Item label={null}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+
+      </Modal> */}
+        <Modal
+      title="Add New Task"
+      open={isModalOpen}
+      onCancel={() => {
+        form.resetFields();
+        // onClose();
+        handleCancel();
+      }}
+      okText="Add task"
+      /* ⬇️  tell the OK button to submit this form */
+      okButtonProps={{ htmlType: 'submit', form: 'taskForm' }}
+    >
+      {/* give the form an id that matches okButtonProps.form */}
+      <Form
+        id="taskForm"
+        form={form}
+        layout="vertical"
+        onFinish={(values) => {
+          addTask(values.task);
+          form.resetFields();
+          // onClose();
+          handleCancel();
+        }}
+      >
+        <Form.Item
+          label="Task title"
+          name="task"
+          rules={[{ required: true, message: 'Please enter a task title' }]}
+        >
+          <Input placeholder="Enter task" />
+        </Form.Item>
+      </Form>
+    </Modal>
       <Modal
         open={isModalCom}
         title={
@@ -274,7 +335,7 @@ export default function TaskPanel() {
           overflow-y: auto;
           overflow-x: hidden;
           height: 80%;
-          padding-right: 0.5rem;
+      
         }
 .task-list::-webkit-scrollbar {
   width: 8px;

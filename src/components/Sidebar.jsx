@@ -4,22 +4,34 @@ import profile2 from '../assets/profile2.png'
 import profile4 from '../assets/profile4.png'
 import profile5 from '../assets/profile5.png'
 import useTheme from '../hooks/useTheme';
+import { CloseOutlined } from '@ant-design/icons';
 
-export default function Sidebar() {
-   const [activeMenu, setActiveMenu] = useState("Dashboard");
-    const { theme, toggleTheme } = useTheme();
-
+export default function Sidebar({mobileOpen, setMobileOpen}) {
+  const [activeMenu, setActiveMenu] = useState("Dashboard");
+  const { theme, toggleTheme } = useTheme();
+  // const [mobileOpen, setMobileOpen] = useState(false);
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
+    if (mobileOpen) setMobileOpen(false);
   };
+
+
   return (
-    <aside className="sidebar">
+  
+    <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
       {/* <h2 className="sidebar-title">Task Manager</h2> */}
-      <p className="section-title">Menu</p>
-     
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+        <p className="section-title">Menu</p>
+       <button
+          className="burger-btn"
+          aria-label="Open sidebar"
+          onClick={handleMenuClick}
+        >
+      <CloseOutlined  style={{fontSize:"18px", paddingBottom:"10px", }}/>
+      </button></div>
       <nav className="sidebar-nav">
         <ul>
-          <li   className={`menu-item ${activeMenu === "Dashboard" ? "active" : ""}`}
+          <li className={`menu-item ${activeMenu === "Dashboard" ? "active" : ""}`}
             onClick={() => handleMenuClick("Dashboard")}>
             <span className="menu-icon">🏠</span>
             Dashboard
@@ -29,17 +41,17 @@ export default function Sidebar() {
             <span className="menu-icon">📁</span>
             Projects
           </li>
-          <li  className={`menu-item ${activeMenu === "Today's Task" ? "active" : ""}`}
+          <li className={`menu-item ${activeMenu === "Today's Task" ? "active" : ""}`}
             onClick={() => handleMenuClick("Today's Task")}>
             <span className="menu-icon">🗓️</span>
             Today's Task
           </li>
-          <li  className={`menu-item ${activeMenu === "All Task" ? "active" : ""}`}
+          <li className={`menu-item ${activeMenu === "All Task" ? "active" : ""}`}
             onClick={() => handleMenuClick("All Task")}>
             <span className="menu-icon">✅</span>
             All Task
           </li>
-          <li  className={`menu-item ${activeMenu === "Calendar" ? "active" : ""}`}
+          <li className={`menu-item ${activeMenu === "Calendar" ? "active" : ""}`}
             onClick={() => handleMenuClick("Calendar")}>
             <span className="menu-icon">📆</span>
             Calendar
@@ -71,20 +83,20 @@ export default function Sidebar() {
       </div>
 
       {/* Theme Switch */}
-       <div className="teams-section">
+      <div className="teams-section">
         <p className="section-title">Theme</p>
-      <div className="theme-switch">
-         
-  
-  <span className="team-name">Dark / Light</span>
-  <label className="switch">
-    <input type="checkbox"  
-     onChange={toggleTheme}
-     checked={theme === 'dark'}/>
-    <span className="slider"></span>
-  </label>
-</div>
-</div>
+        <div className="theme-switch">
+
+
+          <span className="team-name">Dark / Light</span>
+          <label className="switch">
+            <input type="checkbox"
+              onChange={toggleTheme}
+              checked={theme === 'dark'} />
+            <span className="slider"></span>
+          </label>
+        </div>
+      </div>
 
       {/* Styles */}
       <style>
@@ -284,8 +296,50 @@ export default function Sidebar() {
               padding-top: 10px;
             }
           }
+
+          .sidebar {
+  // width: 220px;
+  padding: 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  // height: 100vh;
+  background: var(--sidebar-bg, #fff);
+  transition: transform 0.25s ease;
+}
+
+/* ---------- Mobile off‑canvas ---------- */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    transform: translateX(-100%); /* hidden by default */
+    z-index: 999;                 /* above everything */
+    box-shadow: 2px 0 6px rgba(0,0,0,.15);
+   
+  }
+  .sidebar.open {
+    transform: translateX(0);     /* slide in */
+    width: 70%;
+    //  background-color: 2px 0 6px rgba(0,0,0,.15);
+  }
+
+  /* Hamburger button */
+ 
+
+/* ---------- Desktop hamburger hidden ---------- */
+@media (min-width: 769px) {
+  .burger-btn {
+    display: none;
+  }
+}
+
         `}
       </style>
     </aside>
+  
   );
 }

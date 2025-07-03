@@ -128,3 +128,9 @@ body,
   opacity: 0;
   transition: opacity 200ms ease-in;
 }
+
+.app-layout {
+  display: flex;
+  flex-direction: column;  /* header + main stack */
+  height: 90dvh;          /* use dynamic vh for mobile browsers */
+}

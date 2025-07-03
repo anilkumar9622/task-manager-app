@@ -1,7 +1,8 @@
 import React from 'react';
 import profileLogo from '../assets/profile.png'
+import { AlignRightOutlined } from '@ant-design/icons';
 // import './App.css'
-export default function Header() {
+export default function Header({toggleSidebar}) {
   const date = new Date();
     const dateString = date.toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -19,8 +20,17 @@ export default function Header() {
    
       <div className="header-left">
 
-        <img src={profileLogo} alt="profile" className="profile-img bg-outline" />
+       <div><img src={profileLogo} alt="profile" className="profile-img bg-outline" style={{marginRight:"8px"}} />
         <span className="profile-name">Anil Kumar</span>
+        </div> 
+          <button
+          className="burger-btn"
+          aria-label="Open sidebar"
+          onClick={toggleSidebar}
+        >
+        {/* <FiMenu size={24} /> */}
+        <AlignRightOutlined style={{fontSize:"20px"}}/>
+      </button>
       </div>
 
 
@@ -142,6 +152,23 @@ export default function Header() {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+@media (max-width: 768px) {
+  .header          { flex-direction: row; }          /* stay in a single line */
+  .header-left     { width:100%; }                   /* full‑width row 1 */
+  .header-center   { width:100%; margin:10px 0; }    /* row 2 */
+  .header-right    { width:100%; justify-content:space-between; } /* row 3 */
+
+  .burger-btn {
+    display: inline-flex;
+    margin-left: auto;       /* pushes it flush right within header-left */
+    background: none;
+    border: none;
+  }
+}
+  @media (min-width: 769px) {
+  .burger-btn { display: none; }
 }
 
         `}

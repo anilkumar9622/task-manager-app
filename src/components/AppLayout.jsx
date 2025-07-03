@@ -5,10 +5,10 @@ import TaskPanel from './TaskPanel';
 import Task from './Task';
 // import './styles/AppLayout.css';
 
-export default function AppLayout() {
+export default function AppLayout(props) {
   return (
     <>
-      <Sidebar />
+      <Sidebar mobileOpen={props?.mobileOpen} setMobileOpen={props?.setMobileOpen} />
       <div className="main-content">
         <div className="dashboard-placeholder">
           <Task/>
@@ -42,6 +42,8 @@ export default function AppLayout() {
 @media (max-width: 768px) {
   .app-layout {
     flex-direction: column;
+    min-height: 90vh;
+    overflow: auto;
   }
 
   .sidebar,
@@ -50,9 +52,16 @@ export default function AppLayout() {
     border: none;
   }
 
-  .main-content {
-    padding: 10px;
-  }
+ 
+.main-content {
+  flex: 1 1 auto;   /* take the remaining space */
+  min-height: 100vh;    /* 🔑 let it shrink inside flex */
+  overflow-y: auto; /* vertical scroll */
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+ 
 }
 
 

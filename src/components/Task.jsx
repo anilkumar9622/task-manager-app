@@ -106,15 +106,16 @@
 //   );
 // }
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from '@emotion/styled';
-import  columnsFromBackend  from './KanbanData';
+import columnsFromBackend from './KanbanData';
 import {
   DragDropContext,
   Droppable,
 } from '@hello-pangea/dnd';
 import TaskCard from './TaskCard';
 import useTheme from '../hooks/useTheme';
+import { useTasks } from '../context/TaskContext';
 
 const Container = styled.div`
   display: flex;
@@ -149,76 +150,117 @@ const Title = styled.span`
   margin-bottom: 15px;
 `;
 
-const Task = () => {
-  const [columns, setColumns] = useState(columnsFromBackend);
-  const { theme } = useTheme()
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
+const ColumnWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  min-height: 80vh;
+`;
+const COLUMN_META = {
+  todo: { title: 'To‑do', color: '#6a1b9a', bg: 'rgba(106,27,154,.15)' },
+  inProgress: { title: 'In Progress', color: '#ef6c00', bg: 'rgba(239,108,0,.15)' },
+  done: { title: 'Done', color: '#10957d', bg: 'rgba(16,149,125,.15)' },
+};
 
-    const { source, destination } = result;
-    const sourceCol = columns[source.droppableId];
-    const destCol = columns[destination.droppableId];
+const COLUMN_ORDER = ['todo', 'inProgress', 'done']; // render order
+export default function Task() {
+  const { tasks, setTasks } = useTasks();
+  const { theme } = useTheme();
 
-    // Moving across columns
-    if (source.droppableId !== destination.droppableId) {
-      const sourceItems = [...sourceCol.items];
-      const destItems = [...destCol.items];
-      const [moved] = sourceItems.splice(source.index, 1);
-      destItems.splice(destination.index, 0, moved);
-
-      setColumns({
-        ...columns,
-        [source.droppableId]: {
-          ...sourceCol,
-          items: sourceItems,
-        },
-        [destination.droppableId]: {
-          ...destCol,
-          items: destItems,
-        },
-      });
-    } else {
-      // Reordering within same column
-      const items = [...sourceCol.items];
-      const [moved] = items.splice(source.index, 1);
-      items.splice(destination.index, 0, moved);
-
-      setColumns({
-        ...columns,
-        [source.droppableId]: {
-          ...sourceCol,
-          items,
-        },
-      });
+  /* -------------------- group tasks by status --------------------- */
+  const columns = useMemo(() => {
+    const grouped = { todo: [], inProgress: [], done: [] };
+    for (const t of tasks) {
+      grouped[t.status]?.push(t);
     }
-  };
+    return grouped;
+  }, [tasks]);
 
+  /* -------------------- drag / drop handler ----------------------- */
+  const onDragEnd = ({ draggableId, source, destination }) => {
+  if (!destination) return;
+
+  const srcStatus = source.droppableId;
+  const dstStatus = destination.droppableId;
+
+  setTasks((prev) => {
+    const next = [...prev];
+
+    // 1. Find the task by draggableId
+    const moveIdx = next.findIndex(t => String(t.id) === draggableId);
+    if (moveIdx === -1) {
+      console.error('Task not found:', draggableId);
+      return prev;
+    }
+
+    // 2. Remove it safely
+    const [moved] = next.splice(moveIdx, 1);
+
+    // 3. Update status, completed, pending
+    moved.status = dstStatus;
+    moved.completed = dstStatus === 'done';
+    moved.pending = dstStatus !== 'done';
+
+    // 4. Insert it in the correct place
+    let insertAt = next.findIndex((t, i) => {
+      if (t.status !== dstStatus) return false;
+
+      // count only tasks with same status
+      const before = next
+        .filter(tt => tt.status === dstStatus)
+        .slice(0, destination.index);
+
+      return i === next.indexOf(before[before.length - 1]) + 1;
+    });
+
+    // fallback if no insert point found
+    if (insertAt === -1) insertAt = next.length;
+
+    next.splice(insertAt, 0, moved);
+
+    return next;
+  });
+};
+
+
+  /* helper — keep tasks in the same order as list[] after mutation */
+  function sortByList(status, list) {
+    return list.map((t) => ({ ...t, status })); // already correct order
+  }
+
+  /* -------------------- render ------------------------------------ */
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Container>
-        <TaskColumnStyles>
-          {Object.entries(columns).map(([columnId, column]) => (
-            <Droppable key={columnId} droppableId={columnId}>
-              {(provided) => (
-                <TaskList
-                  $theme={theme}
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                >
-                  <Title color={column.color} bg={column.background}>{column.title}</Title>
-                  {column.items.map((item, index) => (
-                    <TaskCard key={item.id} item={item} index={index} />
-                  ))}
-                  {provided.placeholder}
-                </TaskList>
-              )}
-            </Droppable>
+        <ColumnWrapper>
+          {COLUMN_ORDER.map((colKey) => {
+            const colMeta = COLUMN_META[colKey];
+            const colItems = columns[colKey];
 
-          ))}
-        </TaskColumnStyles>
+            return (
+              <Droppable key={colKey} droppableId={colKey}>
+                {(provided) => (
+                  <TaskList
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    $theme={theme}
+                  >
+                    <Title color={colMeta.color} bg={colMeta.bg}>
+                      {colMeta.title}
+                    </Title>
+
+                    {colItems.map((task, idx) => (
+                      <TaskCard key={task.id} item={task} index={idx} />
+                    ))}
+
+                    {provided.placeholder}
+                  </TaskList>
+                )}
+              </Droppable>
+            );
+          })}
+        </ColumnWrapper>
       </Container>
     </DragDropContext>
   );
-};
-
-export default Task;
+}
+// export default Task;

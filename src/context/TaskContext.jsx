@@ -8,7 +8,7 @@ export const TaskProvider = ({ children }) => {
   const [filter, setFilter] = useState('all');
 
   const addTask = (text) => {
-    setTasks(prev => [...prev, { id: Date.now(), text, completed: false }]);
+    setTasks(prev => [...prev, { id: Date.now(), text, status: "todo" }]);
   };
 
   const deleteTask = (id) => {
@@ -18,7 +18,7 @@ export const TaskProvider = ({ children }) => {
   const toggleComplete = (id) => {
     setTasks(prev =>
       prev.map(task =>
-        task.id === id ? { ...task, completed: !task.completed } : task
+        task.id === id ? { ...task, status: "done" } : task
       )
     );
   };
