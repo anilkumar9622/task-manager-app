@@ -146,7 +146,7 @@ const filteredTasks = tasks.filter((task) => {
         {filteredTasks.reverse().map((data, index) => (
           <li key={index} className="task-item">
             <p style={{ borderBottom: "1px solid #ddd", paddingBottom: "10px", marginBottom: "10px" }}
-              className={`${data.completed ? 'completed' : ''}`}
+              className={`${data.status == "done" ? 'completed' : ''}`}
             >
               {data.text}
             </p>
@@ -159,14 +159,14 @@ const filteredTasks = tasks.filter((task) => {
               </div>
 
               <Flex gap="small" wrap>
-                {!data?.completed &&
+                {data?.status !== "done" ?
                   <Button color="cyan" variant="solid"
                     onClick={() => { showCompleteModal("complete"); setItemId(data?.id) }}
                   >
                     Complete
-                  </Button>}
+                  </Button>:null}
                 <Button color="danger" variant="solid"
-                  onClick={() => showCompleteModal("delete")}>
+                  onClick={() => {showCompleteModal("delete"); setItemId(data?.id)}}>
                   Delete
                 </Button>
               </Flex>
